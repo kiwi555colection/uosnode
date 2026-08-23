@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UOS Node — Universal Orchestration System</title>
+<meta name="description" content="UOS orchestrates spare capacity across everyday devices into one coordinated network — run a node, share idle bandwidth, and earn $UOS. Settled on Robinhood Chain." />
+<meta name="theme-color" content="#000000" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='%234CFF64'%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3Ccircle cx='16' cy='5' r='2.4'/%3E%3Ccircle cx='27' cy='23' r='2.4'/%3E%3Ccircle cx='5' cy='23' r='2.4'/%3E%3C/g%3E%3Cg stroke='%234CFF64' stroke-width='1.6'%3E%3Cpath d='M16 16 16 5M16 16 27 23M16 16 5 23'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="database.js"></script>
+<style>
+  :root{
+    --bg:#000000;--ink:#050505;--panel-top:#171717;--panel-bot:#020202;
+    --neon:#4CFF64;--neon-soft:#8CFF9E;--neon-deep:#16C43A;--chrome:#EDF2EE;
+    --text:#F1F5F2;--muted:#8B938C;--muted-2:#5E655F;
+    --line:rgba(76,255,100,.13);--edge:rgba(76,255,100,.40);--glow:rgba(76,255,100,.30);
+    --maxw:1160px;
+    --gloss:linear-gradient(158deg,var(--panel-top) 0%,#0A0A0A 42%,var(--panel-bot) 100%);
+    --gloss-shadow:inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 34px rgba(0,0,0,.65), 0 20px 50px -22px rgba(0,0,0,.9);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(76,255,100,.045) 1px, transparent 1px);background-size:36px 36px;mask-image:radial-gradient(120% 85% at 50% 0%, #000 22%, transparent 70%)}
+  body::after{content:"";position:fixed;top:-34vh;left:50%;transform:translateX(-50%);width:130vw;height:82vh;z-index:0;pointer-events:none;background:radial-gradient(50% 50% at 50% 50%, rgba(76,255,100,.14), transparent 68%);filter:blur(26px)}
+  a{color:inherit;text-decoration:none}
+  img,canvas{display:block}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--neon);text-shadow:0 0 16px rgba(76,255,100,.45)}
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,.8,.3,1), transform .7s cubic-bezier(.16,.8,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  header.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.55));border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.18rem;letter-spacing:.02em}
+  .brand svg{width:26px;height:26px;filter:drop-shadow(0 0 8px rgba(76,255,100,.6))}
+  .brand .dot{color:var(--neon)}
+  .nav-links{display:flex;align-items:center;gap:34px}
+  .nav-links a{color:var(--muted);font-size:.92rem;transition:color .2s,text-shadow .2s;cursor:pointer}
+  .nav-links a:hover{color:var(--text);text-shadow:0 0 14px rgba(76,255,100,.4)}
+  .nav-actions{display:flex;align-items:center;gap:14px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:.92rem;padding:11px 20px;border-radius:11px;cursor:pointer;border:1px solid transparent;transition:transform .18s ease, box-shadow .22s ease, background .2s, border-color .2s;white-space:nowrap}
+  .btn-primary{background:linear-gradient(180deg,#5EFF74,#25E846);color:#02150A;border:1px solid rgba(150,255,170,.7);box-shadow:0 0 26px rgba(76,255,100,.5), inset 0 1px 0 rgba(255,255,255,.55)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 40px rgba(76,255,100,.8), inset 0 1px 0 rgba(255,255,255,.6)}
+  .btn-ghost{background:linear-gradient(180deg,#151515,#050505);color:#EAFBEE;border:1px solid var(--edge);box-shadow:0 0 18px -6px rgba(76,255,100,.4), inset 0 1px 0 rgba(255,255,255,.05)}
+  .btn-ghost:hover{transform:translateY(-1px);border-color:var(--neon);box-shadow:0 0 26px -4px rgba(76,255,100,.6), inset 0 1px 0 rgba(255,255,255,.07)}
+  .btn-x{background:#fff;color:#000;border:1px solid #fff;box-shadow:0 0 22px -8px rgba(255,255,255,.6)}
+  .btn-x:hover{transform:translateY(-1px);background:#f0f0f0;box-shadow:0 0 30px -6px rgba(255,255,255,.7)}
+  .btn-x svg{width:15px;height:15px}
+  .btn-lg{padding:14px 26px;font-size:1rem;border-radius:12px}
+
+  .hero{padding:74px 0 40px}
+  .hero-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:52px;align-items:center}
+  .hero h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(2.5rem,5.6vw,4.35rem);line-height:1.03;letter-spacing:-.03em;margin:20px 0 22px}
+  .hero h1 .soft{color:var(--muted);display:block}
+  .hero p.lede{font-size:1.12rem;color:var(--muted);max-width:38ch;margin-bottom:32px}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px}
+
+  .chain-badge{display:inline-flex;align-items:center;gap:11px;padding:9px 15px 9px 12px;border:1px solid var(--edge);border-radius:999px;background:linear-gradient(180deg,#101010,#040404);font-size:.82rem;color:var(--muted);box-shadow:0 0 20px -8px rgba(76,255,100,.4)}
+  .chain-badge .chip{display:inline-flex;align-items:center;gap:7px;color:var(--text);font-weight:500}
+  .chain-badge .chip svg{width:15px;height:15px}
+  .chain-badge .sep{width:1px;height:16px;background:var(--edge)}
+
+  .net-wrap{position:relative;height:min(500px,58vh);border:1px solid var(--edge);border-radius:16px;overflow:hidden;background:radial-gradient(80% 70% at 62% 30%, rgba(76,255,100,.08), transparent 62%),#000;box-shadow:0 0 70px -14px rgba(76,255,100,.30), inset 0 0 70px rgba(0,0,0,.85), 0 24px 60px -24px rgba(0,0,0,.9);will-change:transform}
+  .net-wrap canvas{width:100%;height:100%}
+  .net-wrap::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 14px rgba(0,0,0,.55)}
+  .net-hud{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);pointer-events:none;z-index:2}
+  .net-hud .live{display:inline-flex;align-items:center;gap:7px;color:var(--neon);text-shadow:0 0 12px rgba(76,255,100,.6)}
+  .net-hud .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 12px var(--neon);animation:blink 2.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  .net-readout{position:absolute;left:16px;bottom:14px;font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--muted);z-index:2;line-height:1.7}
+  .net-readout b{color:var(--neon-soft);font-weight:500}
+  .net-readout .earn b{color:var(--neon)}
+
+  .stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:46px}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+  .stat{padding:28px 24px;border-right:1px solid var(--line)}
+  .stat:last-child{border-right:none}
+  .stat .num{font-family:'Space Grotesk',sans-serif;font-size:1.9rem;font-weight:600;letter-spacing:-.02em;color:var(--chrome)}
+  .stat .lbl{font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:6px}
+
+  section.block{padding:96px 0}
+  .sec-head{max-width:60ch;margin-bottom:52px}
+  .sec-head h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(1.9rem,3.6vw,2.7rem);line-height:1.1;letter-spacing:-.025em;margin:14px 0 14px}
+  .sec-head p{color:var(--muted);font-size:1.06rem;max-width:52ch}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .step{position:relative;padding:30px 26px 32px;border:1px solid var(--line);border-radius:14px;background:var(--gloss);box-shadow:var(--gloss-shadow);transition:border-color .25s, transform .25s, box-shadow .25s}
+  .step:hover{border-color:var(--edge);transform:translateY(-3px);box-shadow:var(--gloss-shadow), 0 0 34px -10px rgba(76,255,100,.35)}
+  .step .idx{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--neon);letter-spacing:.1em;text-shadow:0 0 14px rgba(76,255,100,.5)}
+  .step h3{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.28rem;margin:16px 0 10px;letter-spacing:-.01em}
+  .step p{color:var(--muted);font-size:.98rem}
+  .step .rule{height:1px;background:linear-gradient(90deg,var(--edge),transparent);margin:18px 0 0}
+
+  .why{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+  .why-card{border:1px solid var(--edge);border-radius:16px;padding:34px;background:var(--gloss);box-shadow:var(--gloss-shadow), 0 0 44px -12px rgba(76,255,100,.22)}
+  .why-card .kv{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid var(--line)}
+  .why-card .kv:last-child{border-bottom:none}
+  .why-card .kv span{color:var(--muted);font-size:.9rem}
+  .why-card .kv b{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--neon-soft);font-size:.9rem}
+  .why-card .cardtop{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .why-card .cardtop .mk{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(76,255,100,.10);border:1px solid var(--edge);box-shadow:inset 0 0 14px rgba(76,255,100,.15)}
+  .why-card .cardtop .mk svg{width:18px;height:18px}
+  .why-card .cardtop .t{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.05rem}
+  .why-card .cardtop .s{font-size:.78rem;color:var(--muted-2)}
+
+  .why-list{list-style:none;display:flex;flex-direction:column;gap:26px}
+  .why-list li h4{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.14rem;margin-bottom:7px;display:flex;align-items:center;gap:11px}
+  .why-list li h4 .tick{width:20px;height:20px;flex:none;border-radius:6px;background:rgba(76,255,100,.14);display:grid;place-items:center;color:var(--neon);box-shadow:0 0 14px -4px rgba(76,255,100,.5)}
+  .why-list li h4 .tick svg{width:12px;height:12px}
+  .why-list li p{color:var(--muted);font-size:.98rem;padding-left:31px}
+
+  .cta{text-align:center;border:1px solid var(--edge);border-radius:20px;padding:70px 30px;background:var(--gloss);box-shadow:var(--gloss-shadow), 0 0 60px -14px rgba(76,255,100,.3)}
+  .cta h2{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(1.9rem,4vw,2.9rem);letter-spacing:-.025em;line-height:1.08;margin-bottom:16px}
+  .cta p{color:var(--muted);max-width:46ch;margin:0 auto 30px;font-size:1.06rem}
+
+  footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px}
+  .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;align-items:flex-start}
+  .foot-brand .brand{margin-bottom:12px}
+  .foot-brand p{color:var(--muted-2);font-size:.9rem;max-width:34ch}
+  .foot-cols{display:flex;gap:64px;flex-wrap:wrap}
+  .foot-col h5{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin-bottom:16px}
+  .foot-col a{display:block;color:var(--muted);font-size:.92rem;margin-bottom:11px;transition:color .2s;cursor:pointer}
+  .foot-col a:hover{color:var(--text)}
+  .foot-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}
+  .foot-bottom p{color:var(--muted-2);font-size:.82rem}
+  .ticker{font-family:'JetBrains Mono',monospace;color:var(--neon);font-size:.82rem;text-shadow:0 0 14px rgba(76,255,100,.5)}
+
+  a:focus-visible,.btn:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--neon);outline-offset:3px;border-radius:8px}
+  .menu-btn{display:none;background:linear-gradient(180deg,#151515,#050505);border:1px solid var(--edge);border-radius:10px;padding:8px 10px;cursor:pointer;color:var(--text)}
+
+  /* profile */
+  .profile-wrap{position:relative}
+  .avatar-btn{width:40px;height:40px;border-radius:50%;padding:0;overflow:hidden;border:1px solid var(--edge);background:#081008;cursor:pointer;box-shadow:0 0 16px -6px rgba(76,255,100,.5);transition:box-shadow .2s,transform .15s}
+  .avatar-btn:hover{transform:translateY(-1px);box-shadow:0 0 22px -4px rgba(76,255,100,.75)}
+  .avatar-btn img{width:100%;height:100%;object-fit:cover}
+  .profile-menu{position:absolute;right:0;top:52px;width:314px;padding:18px;border-radius:16px;border:1px solid var(--edge);background:linear-gradient(160deg,#141414,#040404);box-shadow:0 24px 60px -20px rgba(0,0,0,.9), 0 0 40px -12px rgba(76,255,100,.25);z-index:60;display:flex;flex-direction:column;gap:11px;max-height:82vh;overflow:auto}
+  .pm-head{display:flex;align-items:center;gap:12px}
+  .pm-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--edge);background:#081008;flex:none}
+  .pm-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1rem;word-break:break-word}
+  .pm-handle{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--muted)}
+  .pm-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-top:4px}
+  .pm-input{width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--text);font-size:.86rem;font-family:'Inter',sans-serif}
+  .pm-input:focus{outline:none;border-color:var(--edge);box-shadow:0 0 0 2px rgba(76,255,100,.15)}
+  .pm-btn{width:100%;text-align:center;background:linear-gradient(180deg,#151515,#050505);border:1px solid var(--edge);border-radius:10px;padding:10px;color:#EAFBEE;font-weight:600;font-size:.86rem;cursor:pointer;transition:border-color .2s;font-family:'Inter',sans-serif}
+  .pm-btn:hover{border-color:var(--neon)}
+  .pm-save-full{width:100%;background:linear-gradient(180deg,#5EFF74,#25E846);color:#02150A;border:1px solid rgba(150,255,170,.7);border-radius:10px;padding:11px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 0 24px -8px rgba(76,255,100,.6);margin-top:4px}
+  .pm-save-full:hover{filter:brightness(1.06)}
+  .pm-btn.danger{border-color:rgba(255,90,90,.4);color:#ff9a9a}
+  .pm-btn.danger:hover{border-color:#ff6b6b}
+  .pm-div{height:1px;background:var(--line);margin:2px 0}
+  .pm-links{display:flex;flex-direction:column;gap:6px}
+  .pm-links a{color:var(--neon-soft);font-family:'JetBrains Mono',monospace;font-size:.8rem}
+  .pm-links a:hover{text-decoration:underline}
+
+  /* dashboard */
+  .dash{padding:56px 0 20px}
+  .dash-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:34px}
+  .dash-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.025em;margin:10px 0 6px}
+  .dash-sub{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--muted);word-break:break-all}
+  .node-toggle{display:flex;align-items:center;gap:14px}
+  .status-pill{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+  .status-pill i{width:8px;height:8px;border-radius:50%;background:var(--muted-2)}
+  .status-pill.on{color:var(--neon)}
+  .status-pill.on i{background:var(--neon);box-shadow:0 0 10px var(--neon);animation:blink 2s ease-in-out infinite}
+  .dash-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:22px}
+  .dash-card{border:1px solid var(--line);border-radius:16px;padding:26px;background:var(--gloss);box-shadow:var(--gloss-shadow)}
+  .dash-card.earn-card{border-color:var(--edge);box-shadow:var(--gloss-shadow),0 0 40px -14px rgba(76,255,100,.3)}
+  .dc-label{font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-bottom:14px}
+  .dc-big{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:2.4rem;letter-spacing:-.02em;color:var(--chrome);line-height:1}
+  .dc-big .unit{font-size:1rem;color:var(--neon);font-weight:500}
+  .dc-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:.88rem;color:var(--muted)}
+  .dc-row:last-of-type{border-bottom:none}
+  .dc-row b{font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--neon-soft)}
+  .dc-claim{width:100%;margin-top:16px}
+  .spark{width:100%;height:70px;margin-top:16px;display:block}
+
+  /* toasts */
+  #toasts{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none}
+  .toast{background:linear-gradient(180deg,#141414,#050505);border:1px solid var(--edge);border-radius:12px;padding:11px 18px;font-size:.88rem;color:var(--text);box-shadow:0 12px 30px -10px rgba(0,0,0,.8),0 0 24px -10px rgba(76,255,100,.5);opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{border-color:rgba(255,90,90,.5);box-shadow:0 12px 30px -10px rgba(0,0,0,.8),0 0 24px -10px rgba(255,90,90,.5)}
+
+  /* mobile menu */
+  #mobileMenu{position:absolute;top:68px;left:0;right:0;background:linear-gradient(180deg,#0a0a0a,#000);border-bottom:1px solid var(--edge);padding:12px 24px;flex-direction:column;gap:2px;z-index:49}
+  #mobileMenu a{padding:13px 4px;color:var(--muted);border-bottom:1px solid var(--line);cursor:pointer}
+  #mobileMenu a:last-child{border-bottom:none}
+
+  /* modal (connect X) */
+  .modal-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:22px}
+  .modal{width:100%;max-width:380px;border:1px solid var(--edge);border-radius:18px;padding:26px;background:linear-gradient(160deg,#161616,#040404);box-shadow:0 30px 70px -20px rgba(0,0,0,.9),0 0 50px -12px rgba(76,255,100,.25)}
+  .modal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .modal-top .mt-title{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.15rem}
+  .modal-top .mt-title .xbadge{width:30px;height:30px;border-radius:8px;background:#fff;color:#000;display:grid;place-items:center}
+  .modal-top .mt-title .xbadge svg{width:16px;height:16px}
+  .modal-x{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1}
+  .modal p{color:var(--muted);font-size:.94rem;margin-bottom:16px}
+  .modal .pm-input{margin-bottom:14px}
+  .modal small{display:block;color:var(--muted-2);font-size:.74rem;margin-top:12px;line-height:1.5}
+
+  /* AI chat */
+  #chatBtn{position:fixed;right:22px;bottom:22px;z-index:170;width:58px;height:58px;border-radius:50%;border:1px solid rgba(150,255,170,.7);background:linear-gradient(180deg,#5EFF74,#25E846);color:#02150A;cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 30px -8px rgba(0,0,0,.7),0 0 26px -4px rgba(76,255,100,.7);transition:transform .18s}
+  #chatBtn:hover{transform:translateY(-2px) scale(1.03)}
+  #chatBtn svg{width:26px;height:26px}
+  #chatPanel{position:fixed;right:22px;bottom:92px;z-index:171;width:360px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 130px);display:flex;flex-direction:column;border:1px solid var(--edge);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#0c0c0c,#000);box-shadow:0 30px 70px -20px rgba(0,0,0,.9),0 0 50px -14px rgba(76,255,100,.3)}
+  .chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111,#070707)}
+  .chat-head .ch-title{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.98rem}
+  .chat-head .ch-title .dotmark{width:9px;height:9px;border-radius:50%;background:var(--neon);box-shadow:0 0 10px var(--neon)}
+  .chat-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
+  .chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:84%;padding:10px 13px;border-radius:13px;font-size:.9rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+  .msg.bot{align-self:flex-start;background:#0f1a13;border:1px solid var(--line);color:var(--text);border-bottom-left-radius:4px}
+  .msg.me{align-self:flex-end;background:linear-gradient(180deg,#1c3a26,#122a1a);border:1px solid var(--edge);color:#eafff0;border-bottom-right-radius:4px}
+  .msg.typing{color:var(--muted);font-style:italic}
+  .chat-foot{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#050505}
+  #chatInput{flex:1;min-width:0;background:#0a0a0a;border:1px solid var(--line);border-radius:11px;padding:11px 13px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;resize:none;max-height:90px}
+  #chatInput:focus{outline:none;border-color:var(--edge);box-shadow:0 0 0 2px rgba(76,255,100,.15)}
+  #chatSend{flex:none;width:42px;border:none;border-radius:11px;background:linear-gradient(180deg,#5EFF74,#25E846);color:#02150A;cursor:pointer;display:grid;place-items:center}
+  #chatSend svg{width:18px;height:18px}
+  .chat-hint{padding:0 16px 12px;display:flex;gap:8px;flex-wrap:wrap;background:#050505}
+  .chat-hint button{background:#0f1a13;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 11px;font-size:.76rem;cursor:pointer;font-family:'Inter',sans-serif}
+  .chat-hint button:hover{border-color:var(--edge);color:var(--text)}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr;gap:34px}
+    .net-wrap{height:340px;order:2}
+    .hero-copy{order:1}
+    .why{grid-template-columns:1fr;gap:34px}
+    .stats-grid{grid-template-columns:repeat(2,1fr)}
+    .stat:nth-child(2){border-right:none}
+    .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--line)}
+    .steps{grid-template-columns:1fr}
+    .nav-links{display:none}
+    .menu-btn{display:inline-flex}
+    .hero{padding:48px 0 24px}
+    section.block{padding:70px 0}
+    .dash-grid{grid-template-columns:1fr}
+    .dash-top{align-items:flex-start}
+    .profile-menu{width:min(314px,88vw)}
+  }
+  @media (min-width:901px){#mobileMenu{display:none!important}}
+  @media (max-width:520px){
+    .stats-grid{grid-template-columns:1fr}
+    .stat{border-right:none;border-bottom:1px solid var(--line)}
+    .stat:last-child{border-bottom:none}
+    .hero-cta .btn{flex:1}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="UOS home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><g fill="#4CFF64"><circle cx="16" cy="16" r="4"/><circle cx="16" cy="5" r="2.4"/><circle cx="27" cy="23" r="2.4"/><circle cx="5" cy="23" r="2.4"/></g><g stroke="#4CFF64" stroke-width="1.6"><path d="M16 16 16 5M16 16 27 23M16 16 5 23"/></g></svg>
+      UOS<span class="dot">.</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#how">How it works</a>
+      <a href="#network">The network</a>
+      <a href="#chain">Robinhood Chain</a>
+      <a href="#docs">Docs</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-x js-connect" id="connectBtn" type="button"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zM17.083 19.77h1.833L7.084 4.126H5.117z"/></svg>Connect X</button>
+      <div class="profile-wrap" id="profileWrap" hidden>
+        <button class="avatar-btn" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-label="Profile menu"><img id="navAvatar" alt="Your avatar" /></button>
+        <div class="profile-menu" id="profileMenu" hidden role="menu">
+          <div class="pm-head">
+            <img id="pmAvatar" class="pm-avatar" alt="" />
+            <div>
+              <div class="pm-name" id="pmName">Node Operator</div>
+              <div class="pm-handle" id="pmHandle">@handle</div>
+            </div>
+          </div>
+          <button class="pm-btn" id="changePhoto" type="button">Change profile photo</button>
+          <input type="file" id="photoInput" accept="image/*" hidden />
+
+          <div class="pm-label">Display name</div>
+          <input id="nameInput" class="pm-input" maxlength="24" placeholder="Your name" />
+
+          <div class="pm-label">EVM address (payout)</div>
+          <input id="evmInput" class="pm-input" maxlength="42" placeholder="0x…" spellcheck="false" />
+
+          <div class="pm-label">Telegram</div>
+          <input id="tgInput" class="pm-input" maxlength="32" placeholder="@handle" />
+
+          <button class="pm-save-full" id="saveProfile" type="button">Save changes</button>
+          <div class="pm-links" id="linkedLinks"></div>
+
+          <div class="pm-div"></div>
+          <button class="pm-btn danger" id="disconnectBtn" type="button">Disconnect</button>
+        </div>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    </div>
+  </div>
+  <div id="mobileMenu" hidden>
+    <a href="#how">How it works</a>
+    <a href="#network">The network</a>
+    <a href="#chain">Robinhood Chain</a>
+    <a href="#docs">Docs</a>
+  </div>
+</header>
+
+<main id="top">
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="dash" hidden>
+    <div class="wrap">
+      <div class="dash-top">
+        <div>
+          <span class="eyebrow">Node dashboard</span>
+          <h1 class="dash-title">Welcome back, <span id="dashName">Operator</span></h1>
+          <p class="dash-sub" id="dashSub">@handle</p>
+        </div>
+        <div class="node-toggle">
+          <span class="status-pill" id="statusPill"><i></i> Offline</span>
+          <button class="btn btn-primary" id="nodeBtn" type="button">Start node</button>
+        </div>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-card earn-card reveal">
+          <div class="dc-label">Pending rewards</div>
+          <div class="dc-big"><span id="pending">0.0000</span> <span class="unit">$UOS</span></div>
+          <div style="margin-top:20px">
+            <div class="dc-row"><span>Lifetime claimed</span><b id="lifetime">0.0000 $UOS</b></div>
+            <div class="dc-row"><span>Session earned</span><b id="sessionEarn">0.0000 $UOS</b></div>
+          </div>
+          <button class="btn btn-ghost dc-claim" id="claimBtn" type="button">Claim rewards</button>
+        </div>
+        <div class="dash-card reveal">
+          <div class="dc-label">Live throughput</div>
+          <div class="dc-big"><span id="dRate">0.0</span> <span class="unit">MB/s</span></div>
+          <canvas id="spark" class="spark" aria-hidden="true"></canvas>
+        </div>
+        <div class="dash-card reveal">
+          <div class="dc-label">Node status</div>
+          <div class="dc-row"><span>State</span><b id="dState">Offline</b></div>
+          <div class="dc-row"><span>Uptime</span><b id="dUptime">00:00:00</b></div>
+          <div class="dc-row"><span>Network</span><b>Robinhood</b></div>
+          <div class="dc-row"><span>Payout</span><b id="dPayout">—</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HERO -->
+  <section class="hero" id="heroSection">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Universal Orchestration System</span>
+        <h1>Idle capacity,<span class="soft">orchestrated to earn.</span></h1>
+        <p class="lede">UOS turns the spare bandwidth on your everyday devices into one coordinated network — then orchestrates the work and pays you in $UOS for what your node handles. Nothing to buy. Nothing to manage.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg js-connect" href="#">Run a node</a>
+          <a class="btn btn-ghost btn-lg" href="#docs">Read the docs</a>
+        </div>
+        <div class="chain-badge">
+          <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="#4CFF64" stroke-width="2"><path d="M9 12a3 3 0 0 1 3-3h3a3 3 0 0 1 0 6h-1"/><path d="M15 12a3 3 0 0 1-3 3H9a3 3 0 0 1 0-6h1"/></svg>Robinhood Chain</span>
+          <span class="sep"></span><span>rewards settle in seconds</span>
+        </div>
+      </div>
+
+      <div class="net-wrap" id="network" data-float="0.05">
+        <div class="net-hud"><span>uos · orchestrator</span><span class="live">orchestrating</span></div>
+        <canvas id="net" aria-hidden="true"></canvas>
+        <div class="net-readout">
+          <div>throughput <b id="rate">142.8</b> MB/s · nodes <b>online</b></div>
+          <div class="earn">session <b id="earn">+0.0000</b> $UOS</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="stats reveal">
+        <div class="stats-grid">
+          <div class="stat"><div class="num">12,480</div><div class="lbl">Nodes online</div></div>
+          <div class="stat"><div class="num">3.2 PB</div><div class="lbl">Capacity orchestrated</div></div>
+          <div class="stat"><div class="num">40+</div><div class="lbl">Countries</div></div>
+          <div class="stat"><div class="num">99.2%</div><div class="lbl">Avg. uptime</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="how">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">How it works</span>
+        <h2>Three steps, then it runs itself.</h2>
+        <p>Your device joins as a node, the system orchestrates its spare capacity toward live demand, and you earn for the work it completes.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><div class="idx">01</div><h3>Sign up with X</h3><div class="rule"></div><p style="margin-top:18px">Connect your X account and add a payout address. Your device joins the network as a node in a couple of taps.</p></div>
+        <div class="step reveal"><div class="idx">02</div><h3>Get orchestrated</h3><div class="rule"></div><p style="margin-top:18px">The orchestrator matches live demand to your node — routing work by location, uptime, and available capacity, automatically.</p></div>
+        <div class="step reveal"><div class="idx">03</div><h3>Earn $UOS</h3><div class="rule"></div><p style="margin-top:18px">Every verified unit of work your node completes earns $UOS, settled straight to your wallet.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="chain" style="padding-top:20px">
+    <div class="wrap why">
+      <div class="why-card reveal">
+        <div class="cardtop">
+          <div class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#4CFF64" stroke-width="2"><path d="M9 12a3 3 0 0 1 3-3h3a3 3 0 0 1 0 6h-1"/><path d="M15 12a3 3 0 0 1-3 3H9a3 3 0 0 1 0-6h1"/></svg></div>
+          <div><div class="t">Settled on Robinhood Chain</div><div class="s">settlement layer</div></div>
+        </div>
+        <div class="kv"><span>Settlement time</span><b>~ seconds</b></div>
+        <div class="kv"><span>Cost per payout</span><b>fractions of a cent</b></div>
+        <div class="kv"><span>Reward token</span><b>$UOS</b></div>
+        <div class="kv"><span>Payout cadence</span><b>hourly, verified</b></div>
+      </div>
+      <div class="reveal">
+        <span class="eyebrow">Why Robinhood Chain</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(1.8rem,3.4vw,2.5rem);letter-spacing:-.025em;line-height:1.12;margin:14px 0 26px">Micro-rewards need a chain built for them.</h2>
+        <ul class="why-list">
+          <li><h4><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>Fees that fit tiny payouts</h4><p>Rewards land constantly and in small amounts. Settlement stays cheap enough that what you earn reaches you whole.</p></li>
+          <li><h4><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>Fast, final settlement</h4><p>Balances confirm in seconds, so your wallet reflects real uptime without long waits or pending queues.</p></li>
+          <li><h4><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span>An on-ramp people already know</h4><p>Built on infrastructure from a name millions trust to move money, so getting started doesn't mean learning crypto first.</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="docs" style="padding-top:20px">
+    <div class="wrap">
+      <div class="cta reveal">
+        <span class="eyebrow">Join the network</span>
+        <h2 style="margin-top:14px">Turn the capacity you<br>already waste into rewards.</h2>
+        <p>Be among the first nodes when the orchestration layer opens. Early nodes shape how the network grows.</p>
+        <a class="btn btn-primary btn-lg js-connect" href="#">Run a node</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="#4CFF64"><circle cx="16" cy="16" r="4"/><circle cx="16" cy="5" r="2.4"/><circle cx="27" cy="23" r="2.4"/><circle cx="5" cy="23" r="2.4"/></g><g stroke="#4CFF64" stroke-width="1.6"><path d="M16 16 16 5M16 16 27 23M16 16 5 23"/></g></svg>UOS<span class="dot">.</span></a>
+        <p>Every connected device is a node in the orchestration layer. Together they make the network.</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col"><h5>Product</h5><a href="#how">How it works</a><a href="#network">The network</a><a href="#chain">Robinhood Chain</a></div>
+        <div class="foot-col"><h5>Resources</h5><a href="#">Docs</a><a href="#">Whitepaper</a><a href="#">Tokenomics</a></div>
+        <div class="foot-col"><h5>Community</h5><a href="#">X / Twitter</a></div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <p>© 2026 UOS · Universal Orchestration System · Work in progress. Nothing here is financial advice.</p>
+      <span class="ticker">$UOS</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Connect X modal -->
+<div id="xModal" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Connect with X">
+    <div class="modal-top">
+      <div class="mt-title"><span class="xbadge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zM17.083 19.77h1.833L7.084 4.126H5.117z"/></svg></span> Continue with X</div>
+      <button class="modal-x" id="xModalClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <p>Sign up or log in with your X account to start running a UOS node.</p>
+    <input id="xHandleInput" class="pm-input" maxlength="15" placeholder="@yourhandle" spellcheck="false" />
+    <button class="btn btn-x btn-lg" id="xConnectGo" type="button" style="width:100%"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zM17.083 19.77h1.833L7.084 4.126H5.117z"/></svg> Continue</button>
+    <small>Enter your X handle to continue. Full X OAuth (official “Sign in with X”) requires a backend and can be added later.</small>
+  </div>
+</div>
+
+<!-- AI chat -->
+<button id="chatBtn" type="button" aria-label="Open assistant">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6a8.5 8.5 0 0 1-.9-3.9 8.38 8.38 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z"/></svg>
+</button>
+<div id="chatPanel" hidden>
+  <div class="chat-head">
+    <div class="ch-title"><span class="dotmark"></span> UOS Assistant</div>
+    <button class="chat-close" id="chatClose" type="button" aria-label="Close">&times;</button>
+  </div>
+  <div class="chat-body" id="chatBody" aria-live="polite"></div>
+  <div class="chat-hint" id="chatHint">
+    <button type="button" data-q="What is UOS?">What is UOS?</button>
+    <button type="button" data-q="How do I earn $UOS?">How do I earn?</button>
+    <button type="button" data-q="What is a node?">What is a node?</button>
+  </div>
+  <div class="chat-foot">
+    <textarea id="chatInput" rows="1" placeholder="Ask about crypto, nodes, or UOS…"></textarea>
+    <button id="chatSend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23081008'/%3E%3Cg fill='%234CFF64'%3E%3Ccircle cx='32' cy='32' r='7'/%3E%3Ccircle cx='32' cy='12' r='4'/%3E%3Ccircle cx='52' cy='44' r='4'/%3E%3Ccircle cx='12' cy='44' r='4'/%3E%3C/g%3E%3Cg stroke='%234CFF64' stroke-width='2.6'%3E%3Cpath d='M32 32 32 12M32 32 52 44M32 32 12 44'/%3E%3C/g%3E%3C/svg%3E";
+
+  /* ---------- database (external database.js, with inline fallback) ---------- */
+  var DB = window.UOSDB || (function () {
+    var KEY = "uos_db_v1", mem = {}, ok = false;
+    try { localStorage.setItem("__p", "1"); localStorage.removeItem("__p"); ok = true; } catch (e) { ok = false; }
+    function g() { try { return ok ? localStorage.getItem(KEY) : (KEY in mem ? mem[KEY] : null); } catch (e) { return null; } }
+    function s(v) { try { if (ok) localStorage.setItem(KEY, v); else mem[KEY] = v; } catch (e) { mem[KEY] = v; } }
+    var D = { version: 1, user: { xHandle: "", name: "", photo: "", evm: "", tg: "", createdAt: 0, lastSeen: 0 }, mining: { pending: 0, lifetime: 0, totalUptimeSec: 0, sessions: [] } };
+    function load() { var b = JSON.parse(JSON.stringify(D)), r = g(); if (r) { try { var o = JSON.parse(r); if (o.user) for (var k in b.user) if (k in o.user) b.user[k] = o.user[k]; if (o.mining) for (var m in b.mining) if (m in o.mining) b.mining[m] = o.mining[m]; } catch (e) {} } return b; }
+    function save(r) { r.user.lastSeen = Date.now(); s(JSON.stringify(r)); return r; }
+    return {
+      getUser: function () { return load().user; }, getMining: function () { return load().mining; },
+      saveUser: function (p) { var r = load(); if (!r.user.createdAt) r.user.createdAt = Date.now(); for (var k in p) r.user[k] = p[k]; return save(r); },
+      setMining: function (p) { var r = load(); for (var k in p) r.mining[k] = p[k]; return save(r); },
+      addSession: function (e) { var r = load(); r.mining.sessions.push(e); if (r.mining.sessions.length > 50) r.mining.sessions = r.mining.sessions.slice(-50); return save(r); },
+      exportJSON: function () { return JSON.stringify(load(), null, 2); }
+    };
+  })();
+
+  var user = DB.getUser();
+  var mining = DB.getMining();
+
+  function $(id) { return document.getElementById(id); }
+  function setText(id, v) { var el = $(id); if (el) el.textContent = v; }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function shortAddr(a) { return a ? (a.slice(0, 6) + "…" + a.slice(-4)) : "—"; }
+  function fmtTime(s) { var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; function p(n) { return (n < 10 ? "0" : "") + n; } return p(h) + ":" + p(m) + ":" + p(x); }
+  function sanitizeHandle(v) { v = (v || "").trim().replace(/^@/, ""); var m = v.match(/(?:x\.com|twitter\.com|t\.me)\/([^\/?#\s]+)/i); if (m) v = m[1]; return v.replace(/[^A-Za-z0-9_]/g, ""); }
+  function isEvm(v) { return /^0x[0-9a-fA-F]{40}$/.test(v); }
+  function toast(msg, kind) {
+    var wrap = $("toasts"); if (!wrap) return;
+    var t = document.createElement("div"); t.className = "toast" + (kind === "err" ? " err" : ""); t.textContent = msg; wrap.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add("show"); });
+    setTimeout(function () { t.classList.remove("show"); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }, 2600);
+  }
+
+  /* ---------- hero network canvas ---------- */
+  (function () {
+    var canvas = $("net"); if (!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext("2d");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), nodes = [], packets = [], raf = null, rt = null, LINK = 155;
+    function mk() { var a = (Math.random() * nodes.length) | 0, b = (Math.random() * nodes.length) | 0; if (b === a) b = (b + 1) % nodes.length; return { a: a, b: b, t: Math.random(), speed: rand(0.0028, 0.0068) }; }
+    function build() {
+      var r = canvas.getBoundingClientRect(); w = r.width; h = r.height; if (!w || !h) return;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var n = Math.max(12, Math.min(26, Math.round((w * h) / 23000)));
+      nodes = []; for (var i = 0; i < n; i++) nodes.push({ x: rand(0, w), y: rand(0, h), vx: rand(-0.13, 0.13), vy: rand(-0.13, 0.13), r: rand(1.4, 2.9) });
+      packets = []; var pc = Math.max(6, Math.round(n / 2.2)); for (var j = 0; j < pc; j++) packets.push(mk());
+    }
+    function edges(dim) { for (var i = 0; i < nodes.length; i++) for (var j = i + 1; j < nodes.length; j++) { var dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y, d = Math.sqrt(dx * dx + dy * dy); if (d < LINK) { ctx.strokeStyle = "rgba(76,255,100," + ((1 - d / LINK) * dim).toFixed(3) + ")"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke(); } } }
+    function dots() { for (var i = 0; i < nodes.length; i++) { var nd = nodes[i]; ctx.shadowColor = "rgba(76,255,100,.9)"; ctx.shadowBlur = 10; ctx.beginPath(); ctx.fillStyle = "rgba(200,255,215,.9)"; ctx.arc(nd.x, nd.y, nd.r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; } }
+    function frame() {
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < nodes.length; i++) { var nd = nodes[i]; nd.x += nd.vx; nd.y += nd.vy; if (nd.x <= 0 || nd.x >= w) nd.vx *= -1; if (nd.y <= 0 || nd.y >= h) nd.vy *= -1; nd.x = Math.max(0, Math.min(w, nd.x)); nd.y = Math.max(0, Math.min(h, nd.y)); }
+      edges(0.26); dots();
+      for (var p = 0; p < packets.length; p++) { var pk = packets[p]; pk.t += pk.speed; if (pk.t >= 1) { packets[p] = mk(); continue; } var na = nodes[pk.a], nb = nodes[pk.b]; if (!na || !nb) { packets[p] = mk(); continue; } var x = na.x + (nb.x - na.x) * pk.t, y = na.y + (nb.y - na.y) * pk.t; var g = ctx.createRadialGradient(x, y, 0, x, y, 9); g.addColorStop(0, "rgba(76,255,100,.95)"); g.addColorStop(1, "rgba(76,255,100,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "rgba(235,255,240,.98)"; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill(); }
+      raf = requestAnimationFrame(frame);
+    }
+    function staticFrame() { ctx.clearRect(0, 0, w, h); edges(0.2); dots(); }
+    function start() { build(); if (!w || !h) return; if (raf) cancelAnimationFrame(raf); if (reduce) { staticFrame(); return; } raf = requestAnimationFrame(frame); }
+    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(start, 180); });
+    start();
+    var rateEl = $("rate"), earnEl = $("earn"), acc = 0, hrate = 142.8;
+    setInterval(function () { hrate += rand(-9, 9); if (hrate < 96) hrate = 96; if (hrate > 188) hrate = 188; if (rateEl) rateEl.textContent = hrate.toFixed(1); }, 1200);
+    setInterval(function () { acc += hrate / 1000 * rand(0.6, 1.1); if (earnEl) earnEl.textContent = "+" + acc.toFixed(4); }, 1500);
+  })();
+
+  /* ---------- scroll reveal + float ---------- */
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var reveals = document.querySelectorAll(".reveal");
+    if (reduce || !("IntersectionObserver" in window)) { for (var i = 0; i < reveals.length; i++) reveals[i].classList.add("in"); return; }
+    var io = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }); }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    for (var j = 0; j < reveals.length; j++) io.observe(reveals[j]);
+    var floats = document.querySelectorAll("[data-float]"), ticking = false;
+    function applyFloat() { var y = window.pageYOffset || 0; for (var k = 0; k < floats.length; k++) { var s = parseFloat(floats[k].getAttribute("data-float")) || 0.04; floats[k].style.transform = "translateY(" + (-y * s) + "px)"; } ticking = false; }
+    window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(applyFloat); } }, { passive: true });
+  })();
+
+  /* ---------- profile ---------- */
+  var profileWrap = $("profileWrap"), profileBtn = $("profileBtn"), profileMenu = $("profileMenu"), connectBtn = $("connectBtn");
+
+  function renderLinked() {
+    var box = $("linkedLinks"); if (!box) return; var out = "";
+    if (user.xHandle) out += '<a href="https://x.com/' + user.xHandle + '" target="_blank" rel="noopener">@' + user.xHandle + ' on X</a>';
+    if (user.tg) out += '<a href="https://t.me/' + user.tg + '" target="_blank" rel="noopener">@' + user.tg + ' on Telegram</a>';
+    box.innerHTML = out;
+  }
+  function renderProfile() {
+    var name = user.name || (user.xHandle ? ("@" + user.xHandle) : "Node Operator");
+    var photo = user.photo || DEFAULT_AVATAR;
+    var nav = $("navAvatar"); if (nav) nav.src = photo;
+    var pmA = $("pmAvatar"); if (pmA) pmA.src = photo;
+    setText("pmName", name);
+    setText("pmHandle", user.xHandle ? ("@" + user.xHandle) : "—");
+    setText("dashName", name);
+    setText("dashSub", user.xHandle ? ("@" + user.xHandle) : "—");
+    setText("dPayout", user.evm ? shortAddr(user.evm) : "—");
+    var ni = $("nameInput"); if (ni) ni.value = user.name || "";
+    var ei = $("evmInput"); if (ei) ei.value = user.evm || "";
+    var ti = $("tgInput"); if (ti) ti.value = user.tg || "";
+    renderLinked();
+  }
+  function openMenu() { profileMenu.hidden = false; profileBtn.setAttribute("aria-expanded", "true"); }
+  function closeMenu() { if (profileMenu) profileMenu.hidden = true; if (profileBtn) profileBtn.setAttribute("aria-expanded", "false"); }
+
+  if (profileBtn) profileBtn.addEventListener("click", function (e) { e.stopPropagation(); if (profileMenu.hidden) openMenu(); else closeMenu(); });
+  document.addEventListener("click", function (e) { if (profileWrap && !profileWrap.hidden && !profileWrap.contains(e.target)) closeMenu(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeMenu(); closeMobile(); closeXModal(); } });
+  if (profileMenu) profileMenu.addEventListener("click", function (e) { e.stopPropagation(); });
+
+  $("changePhoto").addEventListener("click", function () { $("photoInput").click(); });
+  $("photoInput").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    if (!/^image\//.test(f.type)) { toast("File must be an image", "err"); this.value = ""; return; }
+    if (f.size > 3 * 1024 * 1024) { toast("Image too large (max 3MB)", "err"); this.value = ""; return; }
+    var rd = new FileReader();
+    rd.onload = function () { user.photo = String(rd.result); DB.saveUser({ photo: user.photo }); renderProfile(); toast("Profile photo updated"); };
+    rd.onerror = function () { toast("Could not read image", "err"); };
+    rd.readAsDataURL(f); this.value = "";
+  });
+
+  $("saveProfile").addEventListener("click", function () {
+    var name = ($("nameInput").value || "").trim().slice(0, 24);
+    var evm = ($("evmInput").value || "").trim();
+    var tg = sanitizeHandle($("tgInput").value);
+    if (evm && !isEvm(evm)) { toast("EVM address must be 0x + 40 hex chars", "err"); return; }
+    if (tg && (tg.length < 5 || tg.length > 32)) { toast("Telegram handle 5–32 chars", "err"); return; }
+    user.name = name || user.name || ("@" + user.xHandle);
+    user.evm = evm; user.tg = tg;
+    DB.saveUser({ name: user.name, evm: user.evm, tg: user.tg });
+    renderProfile(); toast("Profile saved");
+  });
+
+  $("disconnectBtn").addEventListener("click", function () { closeMenu(); disconnect(); });
+
+  /* ---------- connect via X ---------- */
+  var xModal = $("xModal"), heroSection = $("heroSection"), dashboard = $("dashboard");
+  function openXModal() { xModal.hidden = false; var i = $("xHandleInput"); if (i) { i.value = user.xHandle || ""; setTimeout(function () { i.focus(); }, 30); } }
+  function closeXModal() { if (xModal) xModal.hidden = true; }
+  function loggedIn() { return !!user.xHandle; }
+
+  function enterApp(silent) {
+    var was = heroSection && !heroSection.hidden;
+    if (heroSection) heroSection.hidden = true;
+    if (dashboard) dashboard.hidden = false;
+    if (connectBtn) connectBtn.hidden = true;
+    if (profileWrap) profileWrap.hidden = false;
+    renderProfile(); updateLive(); drawSpark();
+    if (dashboard) { var rc = dashboard.querySelectorAll(".reveal"); for (var i = 0; i < rc.length; i++) rc[i].classList.add("in"); }
+    if (!silent && was) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } }
+  }
+  function exitApp() {
+    if (dashboard) dashboard.hidden = true;
+    if (heroSection) heroSection.hidden = false;
+    if (profileWrap) profileWrap.hidden = true;
+    if (connectBtn) connectBtn.hidden = false;
+  }
+  function doConnectX() {
+    var h = sanitizeHandle($("xHandleInput").value);
+    if (h.length < 1 || h.length > 15) { toast("Enter a valid X handle", "err"); return; }
+    user.xHandle = h; if (!user.name) user.name = "@" + h;
+    DB.saveUser({ xHandle: user.xHandle, name: user.name });
+    closeXModal(); enterApp(false); toast("Connected as @" + h);
+  }
+  function disconnect() {
+    stopNode(); uptime = 0; chart = []; sessionEarn = 0; sessionStart = 0;
+    user.xHandle = ""; DB.saveUser({ xHandle: "" }); exitApp(); toast("Disconnected");
+  }
+
+  var connectors = document.querySelectorAll(".js-connect");
+  for (var ci = 0; ci < connectors.length; ci++) connectors[ci].addEventListener("click", function (e) { e.preventDefault(); openXModal(); });
+  $("xConnectGo").addEventListener("click", doConnectX);
+  $("xModalClose").addEventListener("click", closeXModal);
+  xModal.addEventListener("click", function (e) { if (e.target === xModal) closeXModal(); });
+  $("xHandleInput").addEventListener("keydown", function (e) { if (e.key === "Enter") doConnectX(); });
+
+  /* ---------- node / mining loop ---------- */
+  var running = false, uptime = 0, rate = 0, nodeTimer = null, chart = [], sessionEarn = 0, sessionStart = 0, saveTick = 0;
+  function setNodeUI() {
+    var pill = $("statusPill"), btn = $("nodeBtn");
+    if (pill) { pill.classList.toggle("on", running); pill.innerHTML = "<i></i> " + (running ? "Orchestrating" : "Offline"); }
+    if (btn) btn.textContent = running ? "Stop node" : "Start node";
+  }
+  function startNode() { if (running) return; running = true; sessionStart = Date.now(); setNodeUI(); nodeTimer = setInterval(tick, 1000); toast("Node started — orchestrating"); }
+  function stopNode() {
+    if (!running) { setNodeUI(); return; }
+    running = false; if (nodeTimer) { clearInterval(nodeTimer); nodeTimer = null; }
+    rate = 0; setNodeUI(); updateLive();
+    DB.setMining({ pending: mining.pending, totalUptimeSec: mining.totalUptimeSec });
+    if (sessionStart) DB.addSession({ start: sessionStart, end: Date.now(), earned: Number(sessionEarn.toFixed(4)) });
+    toast("Node stopped");
+  }
+  function tick() {
+    uptime += 1; mining.totalUptimeSec += 1; rate = rand(90, 200);
+    var earn = rate / 1000 * rand(0.6, 1.1);
+    mining.pending += earn; sessionEarn += earn;
+    chart.push(rate); if (chart.length > 60) chart.shift();
+    updateLive(); drawSpark();
+    if (++saveTick % 5 === 0) DB.setMining({ pending: mining.pending, totalUptimeSec: mining.totalUptimeSec });
+  }
+  function updateLive() {
+    setText("pending", (mining.pending || 0).toFixed(4));
+    setText("lifetime", (mining.lifetime || 0).toFixed(4) + " $UOS");
+    setText("sessionEarn", sessionEarn.toFixed(4) + " $UOS");
+    setText("dRate", running ? rate.toFixed(1) : "0.0");
+    setText("dState", running ? "Orchestrating" : "Offline");
+    setText("dUptime", fmtTime(uptime));
+  }
+  function drawSpark() {
+    var c = $("spark"); if (!c || !c.getContext) return;
+    var x = c.getContext("2d"); var r = c.getBoundingClientRect(); if (!r.width) return;
+    var dp = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = Math.round(r.width * dp); c.height = Math.round(r.height * dp); x.setTransform(dp, 0, 0, dp, 0, 0);
+    var W = r.width, H = r.height; x.clearRect(0, 0, W, H);
+    if (chart.length < 2) return;
+    var max = Math.max.apply(null, chart), min = Math.min.apply(null, chart), rng = (max - min) || 1;
+    x.beginPath();
+    for (var i = 0; i < chart.length; i++) { var px = i / (chart.length - 1) * W; var py = H - ((chart[i] - min) / rng) * (H - 10) - 5; if (i === 0) x.moveTo(px, py); else x.lineTo(px, py); }
+    x.strokeStyle = "rgba(76,255,100,.95)"; x.lineWidth = 2; x.shadowColor = "rgba(76,255,100,.7)"; x.shadowBlur = 8; x.stroke();
+    x.lineTo(W, H); x.lineTo(0, H); x.closePath(); x.shadowBlur = 0;
+    var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "rgba(76,255,100,.22)"); g.addColorStop(1, "rgba(76,255,100,0)"); x.fillStyle = g; x.fill();
+  }
+  $("nodeBtn").addEventListener("click", function () { if (running) stopNode(); else startNode(); });
+  $("claimBtn").addEventListener("click", function () {
+    if ((mining.pending || 0) <= 0.00005) { toast("Nothing to claim yet", "err"); return; }
+    var amt = mining.pending; mining.lifetime += amt; mining.pending = 0;
+    DB.setMining({ pending: 0, lifetime: mining.lifetime }); updateLive();
+    toast("Claimed " + amt.toFixed(4) + " $UOS");
+  });
+  window.addEventListener("resize", function () { if (dashboard && !dashboard.hidden) drawSpark(); });
+
+  /* ---------- mobile menu ---------- */
+  var menuBtn = $("menuBtn"), mobileMenu = $("mobileMenu");
+  function closeMobile() { if (mobileMenu) mobileMenu.hidden = true; if (menuBtn) menuBtn.setAttribute("aria-expanded", "false"); }
+  if (menuBtn) menuBtn.addEventListener("click", function (e) { e.stopPropagation(); var open = mobileMenu.hidden; mobileMenu.hidden = !open; menuBtn.setAttribute("aria-expanded", open ? "true" : "false"); });
+  if (mobileMenu) { var links = mobileMenu.querySelectorAll("a"); for (var li = 0; li < links.length; li++) links[li].addEventListener("click", closeMobile); }
+  document.addEventListener("click", function (e) { if (mobileMenu && !mobileMenu.hidden && !mobileMenu.contains(e.target) && e.target !== menuBtn) closeMobile(); });
+
+  /* ---------- AI assistant ---------- */
+  var SYSTEM_PROMPT = "You are the UOS Assistant on the UOS (Universal Orchestration System) website. UOS is a DePIN project: users sign up with X, run a lightweight 'node' app that shares their device's spare internet bandwidth, and earn $UOS tokens which settle on Robinhood Chain. Only answer light, friendly questions about (a) crypto basics, (b) DePIN / running a node, and (c) the UOS project itself. Keep answers short: 2-4 sentences, simple language. If a question is unrelated to crypto, nodes, or UOS, politely say you can only help with those topics. Never give financial or investment advice, price predictions, or promises of returns; if relevant, add a brief 'this isn't financial advice' note. Do not claim to perform actions on the site.";
+
+  var KB = [
+    { k: ["what is uos", "about uos", "explain uos", "uos stand", "universal orchestration"], a: "UOS (Universal Orchestration System) is a DePIN network. You run a node that shares your device's spare internet bandwidth, and the system orchestrates that capacity toward real demand — paying you in $UOS for the work your node does." },
+    { k: ["what is depin", "depin"], a: "DePIN means Decentralized Physical Infrastructure Network. Instead of one company owning all the servers, lots of everyday people contribute real resources (like spare bandwidth) and get rewarded in tokens. UOS is a bandwidth-focused DePIN." },
+    { k: ["how earn", "how do i earn", "make money", "get paid", "rewards", "how to earn"], a: "Sign up with X, add a payout (EVM) address, then start your node. While it runs, it shares spare bandwidth and earns $UOS for every verified bit of work. You claim your rewards from the dashboard. (Not financial advice.)" },
+    { k: ["what is a node", "what is node", "node mean", "run a node", "running node"], a: "A node is just your device running the UOS app in the background. It offers your unused bandwidth to the network. The more reliable and online it is, the more work it can be assigned." },
+    { k: ["what is $uos", "uos token", "the token", "tokenomics", "what is uos token"], a: "$UOS is the reward token of the network — it's what your node earns for contributing. It settles on Robinhood Chain so payouts are fast and cheap." },
+    { k: ["robinhood chain", "what chain", "which chain", "blockchain"], a: "UOS settles rewards on Robinhood Chain, an EVM network. It's used because tiny, frequent reward payouts need low fees and fast, final settlement." },
+    { k: ["orchestrat", "how does it work", "how it works"], a: "The orchestrator is the 'brain': it detects demand and routes work to the best-suited nodes based on location, uptime, and available capacity. That coordination is what the 'Orchestration' in UOS refers to." },
+    { k: ["bandwidth", "share bandwidth", "internet"], a: "Bandwidth sharing means your device lends its unused internet capacity to the network when you're not using it. It runs quietly in the background — you don't have to do anything after setup." },
+    { k: ["is it safe", "safe", "security", "secure", "scam"], a: "Good instinct to ask. UOS only uses spare bandwidth and pays to your own wallet address; you stay in control. As with any crypto project, do your own research and never share your seed phrase. (Not financial advice.)" },
+    { k: ["how much", "earn per day", "how much can i earn", "income"], a: "Earnings depend on your uptime, bandwidth, and live network demand — so there's no fixed number. Keeping your node online longer generally means more work assigned. (This isn't a promise of returns.)" },
+    { k: ["connect", "sign up", "signup", "log in", "login", "how to start", "get started"], a: "Click 'Connect X' at the top to sign up with your X account, then open your profile to add an EVM payout address. After that, hit 'Start node' on the dashboard." },
+    { k: ["claim", "withdraw", "cash out"], a: "Your earnings collect as 'pending rewards' on the dashboard. Press 'Claim rewards' to move them to your lifetime balance (and, in the full version, to your payout wallet)." },
+    { k: ["evm", "wallet address", "payout address", "address"], a: "An EVM address is your crypto wallet address (starts with 0x and has 40 hex characters). Add it in your profile so the network knows where to send your $UOS." },
+    { k: ["wallet", "metamask"], a: "A crypto wallet (like MetaMask) holds your tokens and your address. For UOS you just need your EVM address for payouts — paste it into your profile." },
+    { k: ["gas", "gas fee", "fees"], a: "Gas is the small fee to process a blockchain transaction. UOS uses Robinhood Chain specifically because fees are low, so frequent micro-rewards stay worth it." },
+    { k: ["staking", "stake"], a: "Staking generally means locking tokens to help secure a network and earn yield. UOS rewards come from contributing bandwidth rather than staking, though token utility can expand over time." },
+    { k: ["hello", "hi ", "hey", "halo", "hai"], a: "Hey! I'm the UOS Assistant. Ask me anything about UOS, running a node, or crypto basics." },
+    { k: ["thank", "thanks", "makasih"], a: "Anytime! Ask me anything else about UOS or crypto." }
+  ];
+  function localAnswer(q) {
+    var s = (q || "").toLowerCase(); var best = null, bestScore = 0;
+    for (var i = 0; i < KB.length; i++) { var sc = 0; for (var j = 0; j < KB[i].k.length; j++) { if (s.indexOf(KB[i].k[j]) !== -1) sc += KB[i].k[j].length; } if (sc > bestScore) { bestScore = sc; best = KB[i]; } }
+    if (best && bestScore > 0) return best.a;
+    return "I can only help with light questions about crypto, running a node, and the UOS project. Try asking things like \"What is UOS?\", \"How do I earn $UOS?\", or \"What is a node?\"";
+  }
+
+  var chatHistory = [];
+  async function askAI(question) {
+    // Try a real LLM (works inside this preview / with a backend). Falls back to the local knowledge base.
+    try {
+      var res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 400,
+          system: SYSTEM_PROMPT,
+          messages: chatHistory.concat([{ role: "user", content: question }])
+        })
+      });
+      if (res && res.ok) {
+        var data = await res.json();
+        var text = (data && data.content ? data.content : []).map(function (b) { return b && b.type === "text" ? b.text : ""; }).join("").trim();
+        if (text) return text;
+      }
+    } catch (e) {}
+    return localAnswer(question);
+  }
+
+  var chatBtn = $("chatBtn"), chatPanel = $("chatPanel"), chatBody = $("chatBody"), chatInput = $("chatInput"), chatSend = $("chatSend"), chatClose = $("chatClose"), chatHint = $("chatHint");
+  var chatOpened = false, chatBusy = false;
+  function addMsg(text, who) { var d = document.createElement("div"); d.className = "msg " + who; d.textContent = text; chatBody.appendChild(d); chatBody.scrollTop = chatBody.scrollHeight; return d; }
+  function openChat() {
+    chatPanel.hidden = false;
+    if (!chatOpened) { chatOpened = true; addMsg("Hi! I'm the UOS Assistant. Ask me anything about UOS, running a node, or crypto basics.", "bot"); }
+    setTimeout(function () { chatInput.focus(); }, 40);
+  }
+  function closeChat() { chatPanel.hidden = true; }
+  async function sendChat(text) {
+    text = (text || chatInput.value || "").trim(); if (!text || chatBusy) return;
+    chatInput.value = ""; chatInput.style.height = "auto";
+    addMsg(text, "me");
+    chatHistory.push({ role: "user", content: text }); if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+    chatBusy = true; var typing = addMsg("…", "bot typing");
+    var answer = await askAI(text);
+    if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
+    addMsg(answer, "bot");
+    chatHistory.push({ role: "assistant", content: answer }); if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+    chatBusy = false;
+  }
+  chatBtn.addEventListener("click", function () { if (chatPanel.hidden) openChat(); else closeChat(); });
+  chatClose.addEventListener("click", closeChat);
+  chatSend.addEventListener("click", function () { sendChat(); });
+  chatInput.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); } });
+  chatInput.addEventListener("input", function () { this.style.height = "auto"; this.style.height = Math.min(this.scrollHeight, 90) + "px"; });
+  chatHint.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b && b.getAttribute("data-q")) sendChat(b.getAttribute("data-q")); });
+
+  /* ---------- init ---------- */
+  renderProfile();
+  if (loggedIn()) enterApp(true); else exitApp();
+})();
+</script>
+</body>
+</html>
