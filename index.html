@@ -251,9 +251,215 @@
     .hero-cta .btn{flex:1}
   }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+
+  /* extra palette */
+  :root{
+    --cyan:#5EE7FF;
+    --cyan-soft:#A9F1FF;
+    --magenta:#FF5CE1;
+    --magenta-soft:#FFB0F0;
+    --amber:#FFC846;
+    --amber-soft:#FFE29A;
+  }
+
+  /* PRELOADER */
+  #preloader{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:radial-gradient(60% 60% at 50% 40%,rgba(76,255,100,.10),transparent 65%),#000;transition:opacity .6s ease, visibility .6s ease}
+  #preloader.gone{opacity:0;visibility:hidden;pointer-events:none}
+  .pl-inner{width:min(420px,86vw);text-align:center;padding:26px;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .pl-logo{width:74px;height:74px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(76,255,100,.5));animation:plspin 4.5s linear infinite}
+  @keyframes plspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .pl-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.4rem;letter-spacing:.06em}
+  .pl-title span{color:var(--neon);text-shadow:0 0 16px rgba(76,255,100,.6)}
+  .pl-bar{width:100%;height:5px;background:#0a0f0b;border:1px solid var(--line);border-radius:999px;overflow:hidden;position:relative}
+  .pl-fill{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--cyan),var(--neon),var(--magenta));box-shadow:0 0 14px rgba(76,255,100,.6);transition:width .28s ease}
+  .pl-status{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--muted);letter-spacing:.08em;min-height:1.3em}
+  .pl-status b{color:var(--neon)}
+  .pl-meta{display:flex;gap:14px;font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted-2);letter-spacing:.12em;text-transform:uppercase}
+  .pl-meta i{width:6px;height:6px;border-radius:50%;background:var(--neon);box-shadow:0 0 8px var(--neon);display:inline-block;margin-right:5px;animation:blink 1.6s ease-in-out infinite;vertical-align:middle;font-style:normal}
+
+  /* TICKER */
+  #ticker{position:sticky;top:0;z-index:55;height:32px;background:linear-gradient(90deg,#050a06,#000,#050a06);border-bottom:1px solid var(--line);overflow:hidden;display:flex;align-items:center}
+  #ticker::before{content:"";position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,#000,transparent);z-index:2;pointer-events:none}
+  #ticker::after{content:"";position:absolute;right:0;top:0;bottom:0;width:60px;background:linear-gradient(270deg,#000,transparent);z-index:2;pointer-events:none}
+  .tk-track{display:flex;gap:44px;white-space:nowrap;animation:tkflow 42s linear infinite;font-family:'JetBrains Mono',monospace;font-size:.76rem;padding-left:20px}
+  @keyframes tkflow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .tk-item{color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+  .tk-item b{font-weight:500}
+  .tk-item .up{color:var(--neon)}
+  .tk-item .dn{color:var(--magenta)}
+  .tk-item .cyan{color:var(--cyan)}
+  .tk-item .amber{color:var(--amber)}
+  .tk-item .lbl{color:var(--muted-2);text-transform:uppercase;letter-spacing:.1em;font-size:.66rem}
+  header.nav{top:32px}
+
+  /* PARTNER STRIP */
+  .partners{margin-top:38px;padding:18px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:24px 40px;opacity:.85}
+  .partners .pt-lbl{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin-right:8px}
+  .partners .pt{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.98rem;letter-spacing:.02em;transition:color .2s}
+  .partners .pt:hover{color:var(--text)}
+  .partners .pt .dt{width:8px;height:8px;border-radius:2px;display:inline-block}
+  .partners .pt.c1 .dt{background:var(--neon);box-shadow:0 0 8px var(--neon)}
+  .partners .pt.c2 .dt{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  .partners .pt.c3 .dt{background:var(--magenta);box-shadow:0 0 8px var(--magenta)}
+  .partners .pt.c4 .dt{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+  .partners .pt.c5 .dt{background:var(--neon-soft);box-shadow:0 0 8px var(--neon-soft)}
+
+  /* HEADLINE CURSOR */
+  .cursor{display:inline-block;width:.55ch;height:.9em;vertical-align:-.08em;background:var(--neon);margin-left:.06em;box-shadow:0 0 12px rgba(76,255,100,.7);animation:cbl 1s steps(1) infinite}
+  @keyframes cbl{50%{opacity:0}}
+
+  /* multi-color accents on existing pieces */
+  .stat:nth-child(1) .num{color:var(--neon)}
+  .stat:nth-child(2) .num{color:var(--cyan)}
+  .stat:nth-child(3) .num{color:var(--magenta)}
+  .stat:nth-child(4) .num{color:var(--amber)}
+  .stat:nth-child(1) .num,.stat:nth-child(2) .num,.stat:nth-child(3) .num,.stat:nth-child(4) .num{text-shadow:0 0 18px currentColor;filter:brightness(1.05)}
+
+  .step:nth-child(1) .idx{color:var(--cyan);text-shadow:0 0 14px rgba(94,231,255,.6)}
+  .step:nth-child(2) .idx{color:var(--neon)}
+  .step:nth-child(3) .idx{color:var(--magenta);text-shadow:0 0 14px rgba(255,92,225,.6)}
+
+  /* grain overlay for a less-perfect, less-AI feel */
+  body::before{background-image:radial-gradient(rgba(76,255,100,.05) 1px, transparent 1px), radial-gradient(rgba(94,231,255,.035) 1px, transparent 1px);background-size:36px 36px, 90px 90px;background-position:0 0, 18px 18px}
+
+  /* subtle color bleeds in the ambient glow */
+  body::after{background:radial-gradient(45% 45% at 30% 40%, rgba(76,255,100,.14), transparent 70%), radial-gradient(35% 40% at 78% 22%, rgba(94,231,255,.10), transparent 70%), radial-gradient(30% 35% at 55% 85%, rgba(255,92,225,.06), transparent 70%)}
+
+  @media (max-width:900px){
+    #ticker{height:28px}
+    .tk-track{font-size:.7rem}
+    header.nav{top:28px}
+    .pl-logo{width:60px;height:60px}
+  }
+
+
+  /* --- extra animations (all tied to the network idea) --- */
+
+  /* 1) background: slow-scrolling data grid + orbiting orchestrator ring */
+  #bgFx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  #bgFx .grid{position:absolute;inset:-2px;background-image:linear-gradient(rgba(76,255,100,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(76,255,100,.06) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(80% 60% at 50% 40%,#000 30%,transparent 82%);animation:gridpan 26s linear infinite}
+  @keyframes gridpan{from{background-position:0 0,0 0}to{background-position:64px 64px,64px 64px}}
+  #bgFx .ring{position:absolute;left:50%;top:44%;width:min(1100px,120vw);aspect-ratio:1;border-radius:50%;border:1px dashed rgba(76,255,100,.13);transform:translate(-50%,-50%);animation:ringspin 60s linear infinite}
+  #bgFx .ring.r2{width:min(760px,86vw);border-color:rgba(94,231,255,.10);animation-duration:44s;animation-direction:reverse}
+  #bgFx .orb{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--neon);box-shadow:0 0 14px var(--neon);top:-4px;left:50%;transform-origin:50% 50vh}
+  #bgFx .orb.a{background:var(--cyan);box-shadow:0 0 14px var(--cyan)}
+  #bgFx .orb.b{background:var(--magenta);box-shadow:0 0 14px var(--magenta)}
+  #bgFx .beam{position:absolute;inset:0;background:conic-gradient(from 0deg at 50% 50%, transparent 0 340deg, rgba(76,255,100,.10) 350deg, transparent 360deg);animation:beam 14s linear infinite;mix-blend-mode:screen}
+  @keyframes beam{to{transform:rotate(360deg)}}
+  @keyframes ringspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+  /* 2) hero: floating cubes drifting up (idle capacity fragments joining the mesh) */
+  #cubeFx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+  .cube{position:absolute;width:14px;height:14px;border:1px solid rgba(76,255,100,.55);background:linear-gradient(135deg,rgba(76,255,100,.18),transparent);box-shadow:0 0 10px rgba(76,255,100,.35);animation:cubeUp linear infinite}
+  .cube.c2{border-color:rgba(94,231,255,.55);background:linear-gradient(135deg,rgba(94,231,255,.18),transparent);box-shadow:0 0 10px rgba(94,231,255,.35)}
+  .cube.c3{border-color:rgba(255,92,225,.55);background:linear-gradient(135deg,rgba(255,92,225,.18),transparent);box-shadow:0 0 10px rgba(255,92,225,.35)}
+  @keyframes cubeUp{
+    0%{transform:translateY(110%) rotate(0);opacity:0}
+    10%{opacity:.9}
+    90%{opacity:.9}
+    100%{transform:translateY(-30%) rotate(360deg);opacity:0}
+  }
+
+  /* 3) headline glow sweep */
+  .hero h1{position:relative;overflow:hidden}
+  .hero h1::after{content:"";position:absolute;top:0;left:-30%;width:35%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-18deg);animation:sweep 6.5s ease-in-out infinite;pointer-events:none}
+  @keyframes sweep{0%,60%{left:-40%}80%,100%{left:130%}}
+
+  /* 4) stat numbers: count-up feel via subtle bob + glow pulse */
+  .stat .num{display:inline-block;animation:statBob 6s ease-in-out infinite}
+  .stat:nth-child(2) .num{animation-delay:.5s}
+  .stat:nth-child(3) .num{animation-delay:1s}
+  .stat:nth-child(4) .num{animation-delay:1.5s}
+  @keyframes statBob{0%,100%{transform:translateY(0);filter:brightness(1)}50%{transform:translateY(-2px);filter:brightness(1.15)}}
+
+  /* 5) step cards: pulsing orchestration lines connecting them (desktop) */
+  .steps{position:relative}
+  .steps::before{content:"";position:absolute;left:8%;right:8%;top:34px;height:2px;background:linear-gradient(90deg,var(--cyan),var(--neon),var(--magenta));opacity:.35;filter:blur(.4px);animation:linePulse 4s ease-in-out infinite;z-index:0}
+  @keyframes linePulse{0%,100%{opacity:.25}50%{opacity:.7}}
+  .step{position:relative;z-index:1}
+  .step .idx::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;margin-left:8px;vertical-align:1px;animation:dotBlink 1.6s ease-in-out infinite}
+  .step:nth-child(2) .idx::after{animation-delay:.35s}
+  .step:nth-child(3) .idx::after{animation-delay:.7s}
+  @keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.3}}
+  @media (max-width:900px){.steps::before{display:none}}
+
+  /* 6) buttons: energy border sweep on hover */
+  .btn-primary{position:relative;overflow:hidden}
+  .btn-primary::after{content:"";position:absolute;top:0;left:-60%;width:35%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:btnShine 3.8s ease-in-out infinite}
+  @keyframes btnShine{0%,70%{left:-60%}90%,100%{left:140%}}
+
+  /* 7) chain badge: rotating glow */
+  .chain-badge{position:relative}
+  .chain-badge::before{content:"";position:absolute;inset:-2px;border-radius:999px;background:conic-gradient(from 0deg,transparent 0 300deg,rgba(76,255,100,.5) 340deg,transparent 360deg);animation:beam 5s linear infinite;filter:blur(6px);z-index:-1;opacity:.55}
+
+  /* 8) why-card KV rows: shimmer numbers */
+  .why-card .kv b{position:relative;overflow:hidden;display:inline-block}
+  .why-card .kv b::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(-100%);animation:kvShine 7s ease-in-out infinite}
+  .why-card .kv:nth-child(3) b::after{animation-delay:1.4s}
+  .why-card .kv:nth-child(4) b::after{animation-delay:2.8s}
+  .why-card .kv:nth-child(5) b::after{animation-delay:4.2s}
+  @keyframes kvShine{0%,80%{transform:translateX(-100%)}90%,100%{transform:translateX(100%)}}
+
+  /* 9) CTA card: neon border that breathes */
+  .cta{position:relative;isolation:isolate}
+  .cta::before{content:"";position:absolute;inset:-1px;border-radius:20px;padding:1px;background:linear-gradient(120deg,var(--neon),var(--cyan),var(--magenta),var(--neon));background-size:300% 300%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ctaBorder 8s linear infinite;opacity:.8;z-index:-1}
+  @keyframes ctaBorder{to{background-position:300% 0}}
+
+  /* 10) partner strip: subtle color wave */
+  .partners .pt{transition:transform .2s, color .2s}
+  .partners .pt .dt{animation:dotBlink 2.4s ease-in-out infinite}
+  .partners .pt.c2 .dt{animation-delay:.3s}
+  .partners .pt.c3 .dt{animation-delay:.6s}
+  .partners .pt.c4 .dt{animation-delay:.9s}
+  .partners .pt.c5 .dt{animation-delay:1.2s}
+
+  /* 11) chat button: soft radar ping */
+  #chatBtn{position:relative}
+  #chatBtn::before,#chatBtn::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(76,255,100,.55);animation:ping 2.6s ease-out infinite}
+  #chatBtn::after{animation-delay:1.3s}
+  @keyframes ping{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.7);opacity:0}}
+
+  /* 12) status pill (dashboard): rotating conic when running */
+  .status-pill.on{position:relative}
+  .status-pill.on::before{content:"";position:absolute;inset:-1px;border-radius:999px;background:conic-gradient(from 0deg,transparent 0 320deg,var(--neon) 350deg,transparent 360deg);filter:blur(4px);opacity:.55;animation:beam 3.6s linear infinite;z-index:-1}
+
+  /* 13) net-wrap: subtle scanline overlay (like a monitor) */
+  .net-wrap{position:relative}
+  .net-wrap::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.02) 0 2px,transparent 2px 4px);mix-blend-mode:overlay;pointer-events:none;z-index:1;animation:scanline 8s linear infinite}
+  @keyframes scanline{from{background-position:0 0}to{background-position:0 40px}}
+
+  /* 14) footer ticker: $UOS ticker gets a soft glow pulse */
+  .ticker{animation:tickerPulse 3s ease-in-out infinite}
+  @keyframes tickerPulse{0%,100%{filter:drop-shadow(0 0 6px rgba(76,255,100,.6))}50%{filter:drop-shadow(0 0 14px rgba(76,255,100,1))}}
+
+  /* 15) reveal enhancement: staggered on children */
+  .steps .step{transition-delay:0ms}
+  .steps .step:nth-child(2){transition-delay:100ms}
+  .steps .step:nth-child(3){transition-delay:200ms}
+
+  @media (prefers-reduced-motion:reduce){
+    .cube,#bgFx .grid,#bgFx .ring,#bgFx .beam,.chain-badge::before,.cta::before,.hero h1::after,.btn-primary::after,.why-card .kv b::after,#chatBtn::before,#chatBtn::after,.status-pill.on::before,.net-wrap::before,.ticker,.stat .num{animation:none!important}
+  }
+
 </style>
 </head>
 <body>
+
+<div id="preloader" aria-hidden="true">
+  <div class="pl-inner">
+    <img class="pl-logo" src="logo.png" alt="" />
+    <div class="pl-title">Booting <span>UOS</span> node</div>
+    <div class="pl-bar"><div class="pl-fill" id="plFill"></div></div>
+    <div class="pl-status" id="plStatus">initializing…</div>
+    <div class="pl-meta"><span><i></i>orchestrator</span><span><i style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></i>chain 4663</span><span><i style="background:var(--magenta);box-shadow:0 0 8px var(--magenta)"></i>mesh</span></div>
+  </div>
+</div>
+<div id="bgFx" aria-hidden="true"><div class="beam"></div><div class="grid"></div><div class="ring"><span class="orb"></span></div><div class="ring r2"><span class="orb a"></span><span class="orb b" style="transform-origin:50% -50vh"></span></div></div>
+
+<div id="ticker" aria-hidden="true">
+  <div class="tk-track" id="tkTrack"></div>
+</div>
+
 
 <header class="nav">
   <div class="wrap nav-in">
@@ -352,10 +558,12 @@
 
   <!-- HERO -->
   <section class="hero" id="heroSection">
+    <div id="cubeFx" aria-hidden="true"></div>
+
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <span class="eyebrow">Universal Orchestration System</span>
-        <h1>Idle capacity,<span class="soft">orchestrated to earn.</span></h1>
+        <h1>Idle capacity,<span class="soft" id="typeLine">orchestrated to earn.</span><span class="cursor" aria-hidden="true"></span></h1>
         <p class="lede">UOS turns the spare bandwidth on your everyday devices into one coordinated network — then orchestrates the work and pays you in $UOS for what your node handles. Nothing to buy. Nothing to manage.</p>
         <div class="hero-cta">
           <a class="btn btn-primary btn-lg js-connect" href="#">Run a node</a>
@@ -385,6 +593,15 @@
           <div class="stat"><div class="num">40+</div><div class="lbl">Countries</div></div>
           <div class="stat"><div class="num">99.2%</div><div class="lbl">Avg. uptime</div></div>
         </div>
+      </div>
+
+      <div class="partners" aria-label="Ecosystem">
+        <span class="pt-lbl">Ecosystem</span>
+        <span class="pt c1"><span class="dt"></span>Robinhood Chain</span>
+        <span class="pt c2"><span class="dt"></span>Blockscout</span>
+        <span class="pt c3"><span class="dt"></span>WalletConnect</span>
+        <span class="pt c4"><span class="dt"></span>MetaMask</span>
+        <span class="pt c5"><span class="dt"></span>OKX Wallet</span>
       </div>
     </div>
   </section>
@@ -827,5 +1044,107 @@
   if (loggedIn()) enterApp(true); else exitApp();
 })();
 </script>
+
+<script>
+(function(){
+  // Preloader
+  var fill = document.getElementById("plFill");
+  var status = document.getElementById("plStatus");
+  var pre = document.getElementById("preloader");
+  var steps = [
+    ["spinning up node runtime", 12],
+    ["locating peers", 28],
+    ["handshaking orchestrator", 46],
+    ["syncing chain 4663", 68],
+    ["opening bandwidth channels", 86],
+    ["ready", 100]
+  ];
+  var i = 0;
+  function step(){
+    if(i >= steps.length){ setTimeout(function(){ if(pre) pre.classList.add("gone"); setTimeout(function(){ if(pre && pre.parentNode) pre.parentNode.removeChild(pre); }, 800); }, 380); return; }
+    var s = steps[i++];
+    if(status) status.innerHTML = s[0] + " <b>·</b>";
+    if(fill) fill.style.width = s[1] + "%";
+    setTimeout(step, 360 + Math.random()*220);
+  }
+  // start after fonts settle
+  if(document.readyState === "complete") setTimeout(step, 260);
+  else window.addEventListener("load", function(){ setTimeout(step, 260); });
+
+  // Ticker content
+  var items = [
+    ['$UOS','0.0428','up','+12.4%'],
+    ['NODES','12,480','cyan','online'],
+    ['THROUGHPUT','3.2 PB','amber','pooled'],
+    ['CHAIN','Robinhood','cyan','id 4663'],
+    ['UPTIME','99.2%','up','24h'],
+    ['REGIONS','40+','amber','served'],
+    ['REWARDS','~ seconds','up','settled'],
+    ['GAS','fractions','cyan','per payout'],
+    ['ORCHESTRATOR','healthy','up','live']
+  ];
+  function build(){
+    var out = '';
+    for(var r=0;r<2;r++){
+      for(var k=0;k<items.length;k++){
+        var it = items[k];
+        out += '<span class="tk-item"><span class="lbl">'+it[0]+'</span> <b class="'+it[2]+'">'+it[1]+'</b> <span class="'+(it[2]==='up'?'up':(it[2]==='dn'?'dn':(it[2]==='cyan'?'cyan':'amber')))+'">'+it[3]+'</span></span>';
+      }
+    }
+    var t = document.getElementById("tkTrack"); if(t) t.innerHTML = out;
+  }
+  build();
+
+  // Typewriter loop on the second headline line
+  var el = document.getElementById("typeLine");
+  if(el){
+    var phrases = ["orchestrated to earn.","routed to the right nodes.","paid in $UOS, on-chain.","working while you sleep."];
+    var pi = 0, ci = 0, dir = 1, hold = 0;
+    function tick(){
+      var word = phrases[pi];
+      if(dir === 1){
+        ci++;
+        el.textContent = word.slice(0, ci);
+        if(ci >= word.length){ dir = -1; hold = 24; }
+      } else {
+        if(hold > 0){ hold--; }
+        else {
+          ci--;
+          el.textContent = word.slice(0, ci);
+          if(ci <= 0){ dir = 1; pi = (pi + 1) % phrases.length; }
+        }
+      }
+      setTimeout(tick, dir === 1 ? 55 : 30);
+    }
+    setTimeout(tick, 1400);
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  var host = document.getElementById("cubeFx");
+  if(!host) return;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce) return;
+  var colors = ["","c2","c3"];
+  var N = 14;
+  for(var i=0;i<N;i++){
+    var c = document.createElement("span");
+    var col = colors[(Math.random()*colors.length)|0];
+    c.className = "cube " + col;
+    var size = 8 + Math.random()*16;
+    c.style.width = size+"px"; c.style.height = size+"px";
+    c.style.left = (Math.random()*100) + "%";
+    c.style.bottom = "-20px";
+    c.style.animationDuration = (11 + Math.random()*14) + "s";
+    c.style.animationDelay = (Math.random()*-14) + "s";
+    c.style.opacity = (.35 + Math.random()*.5).toFixed(2);
+    host.appendChild(c);
+  }
+})();
+</script>
+
 </body>
 </html>
